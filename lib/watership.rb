@@ -1,3 +1,5 @@
 require "watership/version"
-require "watership/inle"
+require "watership/rarebit_queue"
+require "watership/rarebit_channel"
 require "watership/rarebit"
+require "watership/inle"

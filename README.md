@@ -1,6 +1,8 @@
 # Watership
 
-TODO: Write a gem description
+Watership is a wrapper around Bunny. It attempts to catch connection issues to the RabbitMQ server and provide a fake backend, switching back to the real backend when it becomes available.
+
+**You shouldn't use it. It's dumb.**
 
 ## Installation
 
@@ -18,8 +20,21 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+This is meant for our specific use case, but if you want to give it a go....
 
+Watership gives you channels. Instead of
+
+    client = Bunny.new([options])
+    channel = client.create_channel
+
+You just do
+
+    channel = Watership::Inle.connect([options])
+
+Watership doesn't automatically try to reconnect, but it does provide a couple of "helpful" methods:
+
+* `Watership::Inle.ensure_connection` looks to see if you have a connection (that says it's connected), and if not will try to build one (pace some throttling). Note that the included fake client always reports that it's not connected.
+* `Watership::Inle.reconnect([boolean])` calls connect with the options originally provided, but allows you to pass `true` to force a connection to the fake.
 
 ## Naming
 

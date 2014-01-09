@@ -7,7 +7,7 @@ module Watership
     end
 
     def create_channel
-      RarebitChannel.new
+      Watership::RarebitChannel.new
     end
   end
 end
