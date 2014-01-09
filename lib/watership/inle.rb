@@ -3,6 +3,7 @@ require 'bunny'
 
 module Watership
   class Inle
+    @connection_options = {}
     @connection = nil
     @channel = nil
     @last_connection_attempt = nil
@@ -11,10 +12,11 @@ module Watership
     @retry_timer = 10
 
     def self.connect(options = {}, fake = false)
+      @connection_options.merge!(options)
       @last_connection_attempt = Time.now
 
       @connection = begin
-        Bunny.new options
+        Bunny.new @connection_options
       rescue Bunny::TCPConnectionFailed, Bunny::NetworkFailure
         fake = true
       end unless fake
@@ -23,6 +25,10 @@ module Watership
 
       @connection.start
       @channel = @connection.create_channel
+    end
+
+    def self.reconnect(fake = false)
+      connect({}, fake)
     end
 
     def self.ensure_connection
