@@ -1,3 +1,3 @@
-module Watership
-  VERSION = "0.1.0"
+class Watership
+  VERSION = "0.1.1"
 end
