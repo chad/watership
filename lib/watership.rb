@@ -1,7 +1,6 @@
-require 'watership/version'
-
-require 'bunny'
-require 'json'
+require "bunny"
+require "json"
+require "watership/version"
 
 class Watership
   CONNECTION_EXCEPTIONS = [
@@ -11,35 +10,42 @@ class Watership
     Bunny::TCPConnectionFailed
   ]
 
-  def self.config=(path)
-    @config = IO.read(path).chomp
-  end
-
-  def self.connect_to_rabbit
-    $rabbit = Bunny.new(@config)
-
-    $rabbit.start
-    $channel = $rabbit.create_channel
-  rescue *CONNECTION_EXCEPTIONS => e
-    logger.warn(e.class.name)
-    $channel = nil
-  end
-
-  def self.enqueue(queue_name, data, options = {})
-    if $channel
-      queue = $channel.queue(queue_name, { durable: true }.merge(options))
-      queue.publish(JSON.generate(data))
+  class << self
+    def config=(path)
+      @config = IO.read(path).chomp
     end
-  rescue StandardError => e
-    # $channel.close
-    # $channel = nil # kill the channel so we stop trying to push to Rabbit
 
-    Airbrake.notify(e) if defined?(Airbrake)
-    logger.error e.class.name
+    def enqueue(options = {})
+      options  = options.dup
+      message  = options.delete(:message)
+      name     = options.delete(:name)
+      fallback = options.delete(:fallback)
+
+      queue = connect(name, options)
+      queue.publish(JSON.generate(message))
+    rescue StandardError => exception
+      fallback.call if fallback
+      Airbrake.notify(exception) if defined?(Airbrake)
+      logger.error(exception.class.name)
+    end
+
+    def connect(name, options)
+      channel.queue(name, { durable: true }.merge(options))
+    end
+
+    def channel
+      $channel ||= connection.create_channel
+    rescue *CONNECTION_EXCEPTIONS => exception
+      logger.warn(exception.class.name)
+      $channel = nil
+    end
+
+    def connection
+      Bunny.new(@config).tap { |bunny| bunny.start }
+    end
+
+    def logger
+      @logger ||= defined?(Rails) ? Rails.logger : Logger.new(STDOUT)
+    end
   end
-
-  def self.logger
-    @logger ||= defined?(Rails) ? Rails.logger : Logger.new(STDOUT)
-  end
-
 end
