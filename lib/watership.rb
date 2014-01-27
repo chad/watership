@@ -21,7 +21,7 @@ class Watership
       name     = options.delete(:name)
       fallback = options.delete(:fallback)
 
-      queue = connect(name, options)
+      queue = connect_with_queue(name, options)
       queue.publish(JSON.generate(message))
     rescue StandardError => exception
       fallback.call if fallback
@@ -29,8 +29,14 @@ class Watership
       logger.error(exception.class.name)
     end
 
-    def connect(name, options)
+    def connect_with_queue(name, options)
       channel.queue(name, { durable: true }.merge(options))
+    end
+
+    def reconnect
+      $channel = nil
+      channel
+      true
     end
 
     def channel
