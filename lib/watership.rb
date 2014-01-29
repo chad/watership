@@ -29,7 +29,7 @@ module Watership
       logger.error(exception.class.name)
     end
 
-    def connect_with_queue(name, options)
+    def connect_with_queue(name, options = {})
       channel.queue(name, { durable: true }.merge(options))
     end
 
