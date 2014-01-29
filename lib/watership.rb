@@ -2,7 +2,7 @@ require "bunny"
 require "json"
 require "watership/version"
 
-class Watership
+module Watership
   CONNECTION_EXCEPTIONS = [
     Bunny::ClientTimeout,
     Bunny::NetworkFailure,
