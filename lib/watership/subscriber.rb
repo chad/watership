@@ -9,7 +9,7 @@ module Watership
 
       queue(name).subscribe(options) do |delivery_info, properties, payload|
         perform(JSON.parse(payload))
-        queue_channel.acknowledge(delivery_info.delivery_tag, false)
+        queue_channel.acknowledge(delivery_info.delivery_tag, false) if options[:ack]
       end
     end
 
