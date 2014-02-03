@@ -42,7 +42,7 @@ module Watership
     def channel
       $channel ||= connection.create_channel
     rescue *CONNECTION_EXCEPTIONS => exception
-      logger.warn(exception.class.name)
+      Airbrake.notify(exception) if defined?(Airbrake)
       $channel = nil
     end
 
