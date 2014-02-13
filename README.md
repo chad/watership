@@ -2,7 +2,7 @@
 
 Watership is a wrapper around Bunny. It attempts to catch connection issues to the RabbitMQ server and provide a fake backend, switching back to the real backend when it becomes available.
 
-**You shouldn't use it. It's dumb.**
+It is currently being used in production on a set of applications, but be warned that it's still early in its life.
 
 ## Installation
 
