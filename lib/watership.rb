@@ -11,6 +11,10 @@ module Watership
   ]
 
   class << self
+    def environment=(env)
+      @env = env
+    end
+
     def config=(path)
       @config = IO.read(path).chomp
     end
@@ -25,7 +29,7 @@ module Watership
       queue.publish(JSON.generate(message))
     rescue StandardError => exception
       fallback.call if fallback
-      Airbrake.notify(exception) if defined?(Airbrake)
+      notify(exception)
       logger.error(exception.class.name)
     end
 
@@ -42,12 +46,20 @@ module Watership
     def channel
       $channel ||= connection.create_channel
     rescue *CONNECTION_EXCEPTIONS => exception
-      Airbrake.notify_or_ignore(exception) if defined?(Airbrake)
+      notify(exception)
       $channel = nil
     end
 
     def connection
       Bunny.new(@config).tap { |bunny| bunny.start }
+    end
+
+    def notify(exception)
+      Airbrake.notify_or_ignore(exception) if defined?(Airbrake) && @env == 'production'
+    end
+
+    def logger=(logger)
+      @logger = logger
     end
 
     def logger
