@@ -15,8 +15,8 @@ module Watership
       @env = env
     end
 
-    def config=(path)
-      @config = IO.read(path).chomp
+    def config=(uri)
+      @config = uri
     end
 
     def enqueue(options = {})

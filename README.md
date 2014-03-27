@@ -22,25 +22,19 @@ Or install it yourself as:
 
 This is meant for our specific use case, but if you want to give it a go....
 
-Watership gives you channels. Instead of
+Once you've `require`d it, you configure Watership with:
 
-    client = Bunny.new([options])
-    channel = client.create_channel
+    Watership.config = '[AMQP URI]'
 
-You just do
+Optionally, you can set a logger (`Watership.logger = ...`) and specify the environment (`Watership.environment = ...`).
 
-    channel = Watership::Inle.connect([options])
+Then, connect to your RabbitMQ instance with:
 
-Watership doesn't automatically try to reconnect, but it does provide a couple of "helpful" methods:
+    Watership.reconnect
 
-* `Watership::Inle.ensure_connection` looks to see if you have a connection (that says it's connected), and if not will try to build one (pace some throttling). Note that the included fake client always reports that it's not connected.
-* `Watership::Inle.reconnect([boolean])` calls connect with the options originally provided, but allows you to pass `true` to force a connection to the fake.
+Finally, you push messages like this:
 
-## Naming
-
-Inlé is the Grim Reaper of rabbits in *Watership Down*.
-
-I always hear "rabbit" when someone refers to Welsh rarebit, so I think of it as a fake rabbit.
+    Watership.enqueue(name: 'queue name', message: 'message to enqueue')
 
 ## Contributing
 
