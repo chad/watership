@@ -2,15 +2,18 @@ require "json"
 
 module Watership
   class Consumer
-    def initialize(consumer, url)
+    def initialize(consumer, url, channel_options = {}, queue_options = {})
       @consumer = consumer
       @url = url
+      @prefetch = channel_options.delete(:prefetch) || 0
+      @channel_opts = {durable: true}.merge(channel_options)
+      @queue_opts = {block: true, ack: true}.merge(queue_options)
     end
 
     def consume
       Thread.abort_on_exception = true
       begin
-        queue.subscribe(block: true, ack: true) do |delivery_info, properties, payload|
+        queue.subscribe(@queue_opts) do |delivery_info, properties, payload|
           success = false
           begin
             @consumer.call(JSON.parse(payload))
@@ -45,7 +48,7 @@ module Watership
     private
 
     def queue
-      @queue ||= channel.queue(@consumer.class::QUEUE, durable: true)
+      @queue ||= channel.queue(@consumer.class::QUEUE, @channel_options)
     end
 
     def connection
@@ -53,7 +56,11 @@ module Watership
     end
 
     def channel
-      @connection ||= connection.create_channel
+      @channel ||= begin
+        c = connection.create_channel
+        c.prefetch(@prefetch)
+        c
+      end
     end
   end
 end
