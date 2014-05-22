@@ -48,7 +48,7 @@ module Watership
     private
 
     def queue
-      @queue ||= channel.queue(@consumer.class::QUEUE, @channel_options)
+      @queue ||= channel.queue(@consumer.class::QUEUE, @channel_opts)
     end
 
     def connection

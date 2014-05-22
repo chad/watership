@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.3 - 2014-05-23
+* Fix typo
+
 ## 0.3.2 - 2014-05-22
 * Added optionality to `Watership::Consumer` for greater control over its behavior.
 
