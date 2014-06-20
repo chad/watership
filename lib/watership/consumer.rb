@@ -5,7 +5,7 @@ module Watership
     def initialize(consumer, url, channel_options = {}, queue_options = {})
       @consumer = consumer
       @url = url
-      @prefetch = channel_options.delete(:prefetch) || 0
+      @prefetch = channel_options.delete(:prefetch) || Integer(ENV.fetch("RABBIT_CONSUMER_PREFETCH", 200))
       @channel_opts = {durable: true}.merge(channel_options)
       @queue_opts = {block: true, ack: true}.merge(queue_options)
     end
