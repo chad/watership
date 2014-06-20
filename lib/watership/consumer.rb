@@ -19,28 +19,28 @@ module Watership
             @consumer.call(JSON.parse(payload))
             success = true
           rescue StandardError => exception
-            Watership.logger.error "Error thrown in subscribe block"
-            Watership.logger.error exception.message
-            Watership.logger.error exception.backtrace.join("\n")
-            Watership.notify(exception)
-            Watership.logger.info "Rejecting in rabbit"
+            logger.error "Error thrown in subscribe block"
+            logger.error exception.message
+            logger.error exception.backtrace.join("\n")
+            Airbrake.notify(exception) if defined?(AirBrake)
+            logger.info "Rejecting in rabbit"
             throw(:terminate)
           rescue Interrupt => exception
-            Watership.logger.error "Interrupt in subscribe block"
-            Watership.logger.warn "Stopped gracefully."
+            logger.error "Interrupt in subscribe block"
+            logger.warn "Stopped gracefully."
             throw(:terminate)
           ensure
             if success
-              Watership.logger.info "Acking message"
+              logger.info "Acking message"
               channel.acknowledge(delivery_info.delivery_tag, false)
             else
-              Watership.logger.info "Rejecting message"
+              logger.info "Rejecting message"
               channel.reject(delivery_info.delivery_tag, true)
             end
           end
         end
       ensure
-        Watership.logger.info "Closing Channel"
+        logger.info "Closing Channel"
         channel.close
       end
     end
@@ -61,6 +61,10 @@ module Watership
         c.prefetch(@prefetch)
         c
       end
+    end
+
+    def logger
+      @logger ||= defined?(Rails) ? Rails.logger : Logger.new(STDOUT)
     end
   end
 end
