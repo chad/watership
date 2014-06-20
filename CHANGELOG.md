@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.5 - 2014-06-20
+* Remove dependency on Rails in `Watership::Consumer`.
+
+## 0.3.4 - 2014-06-20
+* Default prefetch to 200.
+
 ## 0.3.3 - 2014-05-23
 * Fix typo
 
