@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.5, 0.3.6 - 2014-06-20
+## 0.3.5, 0.3.6, 0.3.7 - 2014-06-20
 * Remove dependency on Rails in `Watership::Consumer`.
 
 ## 0.3.4 - 2014-06-20

@@ -1,4 +1,6 @@
 require "json"
+require "bunny"
+require "logger"
 
 module Watership
   class Consumer
