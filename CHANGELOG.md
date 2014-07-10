@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.0 - 2014-07-10
+* Add support for running multiple threads in a single consumer.
+
 ## 0.4.0 - 2014-07-10
 * Add retry behavior on messages that generate exceptions in `Watership::Consumer`.
 
