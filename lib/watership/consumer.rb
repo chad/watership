@@ -9,12 +9,12 @@ module Watership
       @url = url
       @prefetch = channel_options.delete(:prefetch) || Integer(ENV.fetch("RABBIT_CONSUMER_PREFETCH", 200))
       @channel_opts = {durable: true}.merge(channel_options)
-      @queue_opts = {block: true, ack: true}.merge(queue_options)
+      @queue_opts = {block: false, ack: true}.merge(queue_options)
     end
 
-    def consume
+    def consume(concurrency = 1)
       Thread.abort_on_exception = true
-      begin
+      concurrency.times do
         queue.subscribe(@queue_opts) do |delivery_info, properties, payload|
           success = true
           data = JSON.parse(payload)
@@ -45,10 +45,18 @@ module Watership
             end
           end
         end
-      ensure
-        logger.info "Closing Channel"
-        channel.close
       end
+
+      # sleep forever
+      sleeping_thread = Thread.new { sleep }
+      Signal.trap("TERM") do
+        sleeping_thread.terminate
+      end
+      sleeping_thread.join
+    rescue Interrupt
+    ensure
+      logger.info "Closing Channel"
+      channel.close
     end
 
     private
