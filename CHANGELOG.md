@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.0 - 2014-07-10
+* Add retry behavior on messages that generate exceptions in `Watership::Consumer`.
+
 ## 0.3.5, 0.3.6, 0.3.7 - 2014-06-20
 * Remove dependency on Rails in `Watership::Consumer`.
 

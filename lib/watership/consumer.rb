@@ -16,28 +16,32 @@ module Watership
       Thread.abort_on_exception = true
       begin
         queue.subscribe(@queue_opts) do |delivery_info, properties, payload|
-          success = false
+          success = true
+          data = JSON.parse(payload)
           begin
-            @consumer.call(JSON.parse(payload))
-            success = true
+            @consumer.call(data)
+            ack_message(delivery_info.delivery_tag)
           rescue StandardError => exception
             logger.error "Error thrown in subscribe block"
             logger.error exception.message
             logger.error exception.backtrace.join("\n")
-            Airbrake.notify(exception) if defined?(AirBrake)
-            logger.info "Rejecting in rabbit"
-            throw(:terminate)
+
+            retries = data["retries"] || 0
+
+            if retries.to_i < 3
+              Watership.enqueue(name: @consumer.class::QUEUE, payload: data.merge({retries: retries+1}))
+            end
+
+            Airbrake.notify(exception) if defined?(Airbrake)
+            Bugsnag.notify(exception, data: {payload: data, retries: retries}) if defined?(Bugsnag)
           rescue Interrupt => exception
+            success = false
             logger.error "Interrupt in subscribe block"
             logger.warn "Stopped gracefully."
             throw(:terminate)
           ensure
-            if success
-              logger.info "Acking message"
-              channel.acknowledge(delivery_info.delivery_tag, false)
-            else
-              logger.info "Rejecting message"
-              channel.reject(delivery_info.delivery_tag, true)
+            unless success
+              reject_message(delivery_info.delivery_tag)
             end
           end
         end
@@ -48,6 +52,15 @@ module Watership
     end
 
     private
+    def ack_message(tag)
+      logger.info "Acking message"
+      channel.acknowledge(tag, false)
+    end
+
+    def reject_message(tag)
+      logger.info "Rejecting message"
+      channel.reject(tag, true)
+    end
 
     def queue
       @queue ||= channel.queue(@consumer.class::QUEUE, @channel_opts)
