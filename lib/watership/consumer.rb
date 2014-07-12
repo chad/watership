@@ -28,12 +28,13 @@ module Watership
 
             retries = data["retries"] || 0
 
+            Airbrake.notify(exception) if defined?(Airbrake)
+            Bugsnag.notify(exception, data: {payload: data, retries: retries}) if defined?(Bugsnag)
+            ack_message(delivery_info.delivery_tag)
+
             if retries.to_i < 3
               Watership.enqueue(name: @consumer.class::QUEUE, payload: data.merge({retries: retries+1}))
             end
-
-            Airbrake.notify(exception) if defined?(Airbrake)
-            Bugsnag.notify(exception, data: {payload: data, retries: retries}) if defined?(Bugsnag)
           rescue Interrupt => exception
             success = false
             logger.error "Interrupt in subscribe block"
