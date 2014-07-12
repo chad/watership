@@ -8,13 +8,16 @@ module Watership
       @consumer = consumer
       @url = url
       @prefetch = channel_options.delete(:prefetch) || Integer(ENV.fetch("RABBIT_CONSUMER_PREFETCH", 200))
+      @concurrency = channel_options.delete(:concurrency) || 1
       @channel_opts = {durable: true}.merge(channel_options)
       @queue_opts = {block: false, ack: true}.merge(queue_options)
     end
 
-    def consume(concurrency = 1)
+    def consume(donotuse = :donotuse)
+      logger.error("Don't provide an argument to Consumer#consume") unless donotuse == :donotuse
+
       Thread.abort_on_exception = true
-      concurrency.times do
+      @concurrency.times do
         queue.subscribe(@queue_opts) do |delivery_info, properties, payload|
           success = true
           data = JSON.parse(payload)
@@ -81,7 +84,7 @@ module Watership
 
     def channel
       @channel ||= begin
-        c = connection.create_channel
+        c = connection.create_channel(nil, @concurrency)
         c.prefetch(@prefetch)
         c
       end
