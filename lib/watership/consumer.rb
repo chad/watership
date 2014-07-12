@@ -20,8 +20,8 @@ module Watership
       @concurrency.times do
         queue.subscribe(@queue_opts) do |delivery_info, properties, payload|
           success = true
-          data = JSON.parse(payload)
           begin
+            data = JSON.parse(payload)
             @consumer.call(data)
             ack_message(delivery_info.delivery_tag)
           rescue StandardError => exception
