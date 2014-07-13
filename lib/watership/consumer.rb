@@ -19,11 +19,10 @@ module Watership
       Thread.abort_on_exception = true
       @concurrency.times do
         queue.subscribe(@queue_opts) do |delivery_info, properties, payload|
-          success = true
           begin
             data = JSON.parse(payload)
             @consumer.call(data)
-            ack_message(delivery_info.delivery_tag)
+            success = true
           rescue StandardError => exception
             logger.error "Error thrown in subscribe block"
             logger.error exception.message
@@ -33,18 +32,19 @@ module Watership
 
             Airbrake.notify(exception) if defined?(Airbrake)
             Bugsnag.notify(exception, data: {payload: data, retries: retries}) if defined?(Bugsnag)
-            ack_message(delivery_info.delivery_tag)
 
             if retries.to_i < 3
               Watership.enqueue(name: @consumer.class::QUEUE, payload: data.merge({retries: retries+1}))
+              success = true
             end
           rescue Interrupt => exception
-            success = false
             logger.error "Interrupt in subscribe block"
             logger.warn "Stopped gracefully."
             throw(:terminate)
           ensure
-            unless success
+            if success
+              ack_message(delivery_info.delivery_tag)
+            else
               reject_message(delivery_info.delivery_tag)
             end
           end
